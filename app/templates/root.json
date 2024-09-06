@@ -1,14 +1,22 @@
 {
-    "@odata.type": "#ServiceRoot.v1_5_0.ServiceRoot",
+    "@odata.type": "#ServiceRoot.v1_5_1.ServiceRoot",
     "Id": "FakeFishService",
     "Name": "FakeFish Service",
-    "RedfishVersion": "1.5.0",
+    "RedfishVersion": "1.6.0",
     "UUID": "not-that-production-ready",
     "Chassis": {
         "@odata.id": "/redfish/v1/Chassis"
     },
     "Systems": {
         "@odata.id": "/redfish/v1/Systems"
+    },
+    "Links": {
+        "Sessions": {
+            "@odata.id": "/redfish/v1/SessionService/Sessions"
+        }
+    },
+   "SessionService": {
+        "@odata.id": "/redfish/v1/SessionService"
     },
     "Managers": {
         "@odata.id": "/redfish/v1/Managers"

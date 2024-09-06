@@ -8,11 +8,15 @@ import requests
 import subprocess
 import argparse
 import base64
+import uuid
+import random
 from datetime import datetime
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 app = flask.Flask(__name__)
+
+sessions = {}
 
 @app.route('/redfish/v1/')
 def root_resource():
@@ -21,6 +25,62 @@ def root_resource():
 @app.route('/redfish/v1/Managers')
 def manager_collection_resource():
     return flask.render_template('managers.json')
+
+@app.route('/redfish/v1/SessionService')
+def sessionservice_collection_resource():
+    return flask.render_template('sessionservice.json')
+
+@app.route('/redfish/v1/SessionService/Sessions', methods=['GET', 'POST'])
+def sessions_collection_resource():
+    global sessions
+    if flask.request.method == 'POST':
+        username = flask.request.json.get('UserName')
+        password = flask.request.json.get('Password')
+        token = f'{random.getrandbits(128):016x}'
+        id = username + uuid.uuid4().hex
+        sessions[token] = {'id': id, 'decoded_creds': username + ':' + password}
+        app.logger.info('Number of sessions: ' + str(len(sessions)))
+        app.logger.info('Token: ' + token + ', Data: ' + str(sessions[token]))
+
+        location = flask.request.script_root + flask.request.path + '/' + id
+        data = flask.render_template(
+           'session.json',
+           id=id,
+           username=username,
+           location=location,
+         )
+        resp = flask.Response(data)
+        resp.headers['X-Auth-Token'] = token
+        resp.headers['Location'] = location
+        return resp
+
+    return flask.render_template(
+        'fake_session.json',
+        url=flask.request.script_root + flask.request.path,
+        id_list=[sessions[key]['id'] for key in sessions.keys()],
+        count=len(sessions),
+     )
+
+@app.route('/redfish/v1/SessionService/Sessions/<sessionid>', methods=['GET', 'DELETE'])
+def session_resource(sessionid):
+    global sessions
+    if flask.request.method == 'DELETE':
+        for token in sessions.keys():
+            if sessionid in sessions[token]['id']:
+                sessions.pop(token)
+                app.logger.info('Number of sessions: ' + str(len(sessions)))
+                return '', 200
+        return '', 404
+
+    for token in sessions.keys():
+        if sessionid in sessions[token]['id']:
+            return flask.render_template(
+                'session.json',
+                id=sessionid,
+                username=sessions[token]['decoded_creds'].split(':', 1)[0],
+                location=flask.request.script_root + flask.request.path
+             )
+    return '', 404
 
 @app.route('/redfish/v1/Chassis')
 def chassis_collection_resource():
@@ -168,15 +228,25 @@ def virtualmedia_eject():
 
 
 def get_credentials(flask_request):
-    auth = flask_request.headers.get('Authorization', None)
+    global sessions
     username = ''
     password = ''
-    if auth is not None and auth.startswith('Basic '):
-        encoded_creds = auth.split(' ', 1)[1]
-        decoded_creds = base64.b64decode(encoded_creds).decode('utf-8')
+    token = flask_request.headers.get('X-Auth-Token', None)
+    if token is not None:
+        session = sessions.get(token, None)
+        if session is not None:
+            decoded_creds = session['decoded_creds']
+    else:
+        auth = flask_request.headers.get('Authorization', None)
+        if auth is not None and auth.startswith('Basic '):
+            encoded_creds = auth.split(' ', 1)[1]
+            decoded_creds = base64.b64decode(encoded_creds).decode('utf-8')
+
+    if decoded_creds is not None:
         username, password = decoded_creds.split(':', 1)
-    app.logger.debug('Returning credentials')
-    app.logger.debug('Username: ' + username + ', password: ' + password)
+
+    app.logger.info('Returning credentials')
+    app.logger.info('Username: ' + username + ', password: ' + password)
     return username, password
 
 def set_env_vars(bmc_endpoint, username, password):
