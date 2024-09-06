@@ -17,6 +17,9 @@ requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 app = flask.Flask(__name__)
 
 sessions = {}
+bootsourceoverride_enabled = 'Disabled'
+bootsourceoverride_target = 'None'
+bootsourceoverride_mode = 'UEFI'
 
 @app.route('/redfish/v1/')
 def root_resource():
@@ -95,10 +98,16 @@ def system_resource():
     username, password = get_credentials(flask.request)
     global bmc_ip
     global power_state
+    global bootsourceoverride_enabled
+    global bootsourceoverride_target
+    global bootsourceoverride_mode
     if flask.request.method == 'GET':
        return flask.render_template(
            'fake_system.json',
            power_state=power_state,
+           bootsourceoverride_enabled=bootsourceoverride_enabled,
+           bootsourceoverride_target=bootsourceoverride_target,
+           bootsourceoverride_mode=bootsourceoverride_mode,
         )
     else:
        app.logger.info('patch request')
@@ -106,8 +115,9 @@ def system_resource():
        if not boot:
            return ('PATCH only works for Boot'), 400
        if boot:
-           target = boot.get('BootSourceOverrideTarget')
-           mode = boot.get('BootSourceOverrideMode')
+           enabled = boot.get('BootSourceOverrideEnabled', bootsourceoverride_enabled)
+           target = boot.get('BootSourceOverrideTarget', bootsourceoverride_target)
+           mode = boot.get('BootSourceOverrideMode', bootsourceoverride_mode)
            if not target and not mode:
                return ('Missing the BootSourceOverrideTarget and/or '
                        'BootSourceOverrideMode element', 400)
@@ -115,10 +125,16 @@ def system_resource():
                app.logger.info('Running script that sets boot from VirtualCD once')
                try:
                    my_env = set_env_vars(bmc_ip, username, password)
+                   my_env['BOOTSOURCEOVERRIDE_ENABLED'] = enabled
+                   my_env['BOOTSOURCEOVERRIDE_TARGET'] = target
+                   my_env['BOOTSOURCEOVERRIDE_MODE'] = mode
                    subprocess.check_call(['custom_scripts/bootfromcdonce.sh'], env=my_env)
                except subprocess.CalledProcessError as e:
                    return ('Failed to set boot from virtualcd once', 400)
 
+               bootsourceoverride_enabled = enabled
+               bootsourceoverride_target = target
+               bootsourceoverride_mode = mode
                return '', 204
 
 @app.route('/redfish/v1/Systems/1/EthernetInterfaces', methods=['GET'])
@@ -152,6 +168,9 @@ def manager_resource():
            methods=['POST'])
 def system_reset_action():
     global bmc_ip
+    global bootsourceoverride_enabled
+    global bootsourceoverride_target
+    global bootsourceoverride_mode
     username, password = get_credentials(flask.request)
     reset_type = flask.request.json.get('ResetType')
     global power_state
@@ -163,6 +182,11 @@ def system_reset_action():
         except subprocess.CalledProcessError as e:
             return ('Failed to poweron the server', 400)
         power_state = 'On'
+
+        bootsourceoverride_enabled = 'Disabled'
+        bootsourceoverride_target = 'None'
+        bootsourceoverride_mode = 'UEFI'
+
     else:
         app.logger.info('Running script that powers off the server')
         try:

@@ -11,14 +11,15 @@
     },
     "PowerState": {{ power_state|string|tojson }},
     "Boot": {
-        "BootSourceOverrideEnabled": "Continuous",
-        "BootSourceOverrideTarget": "Hdd",
+        "BootSourceOverrideEnabled": {{ bootsourceoverride_enabled|string|tojson }},
+        "BootSourceOverrideTarget": {{ bootsourceoverride_target|string|tojson }},
         "BootSourceOverrideTarget@Redfish.AllowableValues": [
-            "Pxe",
+            "None",
             "Cd",
-            "Hdd"
+            "Hdd",
+            "Pxe"
         ],
-        "BootSourceOverrideMode": "UEFI",
+        "BootSourceOverrideMode": {{ bootsourceoverride_mode|string|tojson }},
         "UefiTargetBootSourceOverride": "/0x31/0x33/0x01/0x01"
     },
     "ProcessorSummary": {
