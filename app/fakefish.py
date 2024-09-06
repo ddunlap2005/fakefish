@@ -173,8 +173,9 @@ def system_reset_action():
     global bootsourceoverride_mode
     username, password = get_credentials(flask.request)
     reset_type = flask.request.json.get('ResetType')
+    app.logger.info(f'ResetType: {reset_type}')
     global power_state
-    if reset_type == 'On':
+    if reset_type == 'On' or reset_type == 'ForceOn':
         app.logger.info('Running script that powers on the server')
         try:
             my_env = set_env_vars(bmc_ip, username, password)
