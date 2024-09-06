@@ -221,6 +221,11 @@ def virtualmedia_collection_resource():
 @app.route('/redfish/v1/Managers/1/VirtualMedia/Cd', methods=['GET'])
 def virtualmedia_cd_resource():
     global inserted
+    global image_url
+    if inserted:
+        app.logger.info(f'VirtualMedia Cd inserted: {image_url}')
+    else:
+        app.logger.info('VirtualMedia Cd absent')
     return flask.render_template(
         'virtualmedia_cd.json',
         inserted=inserted,
