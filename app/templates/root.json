@@ -4,6 +4,9 @@
     "Name": "FakeFish Service",
     "RedfishVersion": "1.5.0",
     "UUID": "not-that-production-ready",
+    "Chassis": {
+        "@odata.id": "/redfish/v1/Chassis"
+    },
     "Systems": {
         "@odata.id": "/redfish/v1/Systems"
     },

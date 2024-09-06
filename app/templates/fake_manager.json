@@ -11,14 +11,17 @@
   "Links": {
     "ManagerForChassis": [
       {
-        "@odata.id": "/redfish/v1/Chassis/fake-chassis"
+        "@odata.id": "/redfish/v1/Chassis/1"
       }
     ],
     "ManagerForServers": [
       {
         "@odata.id": "/redfish/v1/Systems/1"
       }
-    ]
+    ],
+    "ManagerInChassis": {
+      "@odata.id": "/redfish/v1/Chassis/1"
+    }
   },
   "ManagerType": "BMC",
   "Model": "Palc 2000",

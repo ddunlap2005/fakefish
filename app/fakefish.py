@@ -22,6 +22,10 @@ def root_resource():
 def manager_collection_resource():
     return flask.render_template('managers.json')
 
+@app.route('/redfish/v1/Chassis')
+def chassis_collection_resource():
+    return flask.render_template('chassis.json')
+
 @app.route('/redfish/v1/Systems')
 def system_collection_resource():
     return flask.render_template('systems.json')
@@ -37,7 +41,7 @@ def system_resource():
            power_state=power_state,
         )
     else:
-       app.logger.info('patch request') 
+       app.logger.info('patch request')
        boot = flask.request.json.get('Boot')
        if not boot:
            return ('PATCH only works for Boot'), 400
@@ -61,6 +65,22 @@ def system_resource():
 def manage_interfaces():
     return flask.render_template('fake_interfaces.json')
 
+@app.route('/redfish/v1/Chassis/1', methods=['GET'])
+def chassis_resource():
+    global power_state
+    return flask.render_template(
+           'fake_chassis.json',
+           power_state=power_state,
+        )
+
+@app.route('/redfish/v1/Chassis/1/Power', methods=['GET'])
+def manage_power():
+    return flask.render_template('fake_power.json')
+
+@app.route('/redfish/v1/Chassis/1/Thermal', methods=['GET'])
+def manage_thermal():
+    return flask.render_template('fake_thermal.json')
+
 @app.route('/redfish/v1/Managers/1', methods=['GET'])
 def manager_resource():
     return flask.render_template(
@@ -74,7 +94,7 @@ def system_reset_action():
     global bmc_ip
     username, password = get_credentials(flask.request)
     reset_type = flask.request.json.get('ResetType')
-    global power_state 
+    global power_state
     if reset_type == 'On':
         app.logger.info('Running script that powers on the server')
         try:

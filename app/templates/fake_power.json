@@ -1,0 +1,14 @@
+{
+    "@odata.type": "#Power.Power",
+    "Name": "PowerMetrics",
+    "Id": "Power",
+    "PowerControl": [
+    ],
+    "PowerSupplies": [
+    ],
+    "Redundancy": [
+    ],
+    "Oem": {},
+    "@odata.context": "/redfish/v1/$metadata#Power.Power",
+    "@odata.id": "/redfish/v1/Chassis/1/Power"
+}
