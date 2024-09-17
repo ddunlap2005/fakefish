@@ -5,7 +5,7 @@ IMAGE_URL  ?= $(REGISTRY)/$(ORG)/$(IMAGE_NAME)
 AUTHOR     ?= Mario Vazquez <mavazque@redhat.com>
 TAG        ?= latest
 
-.PHONY: build-dell build-kubevirt build-supermicro build-hpe-gen9 build-custom pre-reqs
+.PHONY: build-dell build-kubevirt build-supermicro build-hpe-gen9 build-proxmox build-custom pre-reqs
 
 default: pre-reqs build-custom
 
@@ -20,6 +20,9 @@ build-supermicro:
 
 build-hpe-gen9:
 	podman build . -f hpe-gen9-ilo4-scripts/Containerfile -t $(IMAGE_URL):$(TAG) --label org.opencontainers.image.authors"=$(AUTHOR)"
+
+build-proxmox:
+	podman build . -f proxmox_scripts/Containerfile -t $(IMAGE_URL):$(TAG) --label org.opencontainers.image.authors"=$(AUTHOR)"
 
 build-custom: pre-reqs
 	podman build . -f custom_scripts/Containerfile -t $(IMAGE_URL):$(TAG) --label org.opencontainers.image.authors"=$(AUTHOR)"
