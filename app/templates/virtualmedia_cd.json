@@ -11,6 +11,11 @@
     "ConnectedVia": "URI",
     "Inserted": {{ inserted|tojson }},
     "WriteProtected": false,
+    "Oem": {
+        "Hpe": {
+            "BootOnNextServerReset": false
+        }
+    },
     "Actions": {
         "#VirtualMedia.EjectMedia": {
             "target": "/redfish/v1/Managers/1/VirtualMedia/Cd/Actions/VirtualMedia.EjectMedia"

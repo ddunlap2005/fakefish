@@ -4,6 +4,7 @@
     "Name": "fake-system",
     "UUID": "1",
     "Manufacturer": "FakeFish",
+    "Model": "Custom",
     "Status": {
         "State": "Enabled",
         "Health": "OK",

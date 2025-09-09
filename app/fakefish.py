@@ -201,6 +201,15 @@ def system_reset_action():
         bootsourceoverride_target = 'None'
         bootsourceoverride_mode = 'UEFI'
 
+    elif reset_type == 'Restart' or reset_type == 'ForceRestart':
+        app.logger.info('Running script that resets the server')
+        try:
+            my_env = set_env_vars(bmc_ip, username, password)
+            subprocess.check_call(['custom_scripts/powerreset.sh'], env=my_env)
+        except subprocess.CalledProcessError:
+            return ('Failed to powerreset the server', 400)
+        power_state = 'On'
+
     else:
         app.logger.info('Running script that powers off the server')
         try:
@@ -233,6 +242,13 @@ def virtualmedia_cd_resource():
         )
 
 
+@app.route('/redfish/v1/Managers/1/VirtualMedia/Cd', methods=['PATCH'])
+def virtualmedia_cd_patch():
+    global inserted
+    app.logger.info(f'data = {flask.request.data}')
+    return '', 200
+
+
 @app.route('/redfish/v1/Managers/1/VirtualMedia/Cd/Actions/VirtualMedia.InsertMedia',
            methods=['POST'])
 def virtualmedia_insert():
@@ -252,7 +268,19 @@ def virtualmedia_insert():
             subprocess.check_call(['custom_scripts/mountcd.sh', image_url], env=my_env)
         except subprocess.CalledProcessError:
             return ('Failed to mount virtualcd', 400)
-        return '', 204
+
+        result = {
+            "error": {
+                "code": "iLO.0.10.ExtendedInfo",
+                "message": "See @Message.ExtendedInfo for more information.",
+                "@Message.ExtendedInfo": [
+                    {
+                        "MessageId":"Base.1.18.Success"
+                    }
+                ]
+            }
+        }
+        return flask.jsonify(result)
 
 
 @app.route('/redfish/v1/Managers/1/VirtualMedia/Cd/Actions/VirtualMedia.EjectMedia',
