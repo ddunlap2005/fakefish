@@ -25,7 +25,7 @@ sleep 20
 
 # NOTE: There is no "BootOnce" option. Reset the boot order and eject the ISO
 curl --silent --insecure  --cookie "${COOKIE}" --header "${CSRFTOKEN}" -X POST \
-        --data-urlencode boot='order=scsi0;ide2;net1' \
+        --data-urlencode boot='order=sata0;ide2;net1' \
         --data-urlencode ide2='none' \
         https://${BMC_ENDPOINT}:8006/api2/json/nodes/${TARGETNODE}/qemu/${VMID}/config
 # Ignore error on this last command. It is meant to help, but does not need to succeed.
