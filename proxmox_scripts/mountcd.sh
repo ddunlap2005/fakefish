@@ -18,6 +18,7 @@ ISO=${1}
 NAME=${VMID}-$(basename ${ISO})
 
 # Unmount CD on VM
+echo "Umounting CD"
 curl --silent --insecure  --cookie "${COOKIE}" --header "${CSRFTOKEN}" -X POST \
         --data-urlencode ide2="none" \
         https://${BMC_ENDPOINT}:8006/api2/json/nodes/${TARGETNODE}/qemu/${VMID}/config
@@ -26,6 +27,7 @@ if [ $? -ne 0 ]; then
 fi
 
 # Delete existing ISO if it exists
+echo "Delete existing ISO... $NAME"
 TASK=$(curl --silent --insecure --cookie "${COOKIE}" --header "${CSRFTOKEN}" -X DELETE \
         https://${BMC_ENDPOINT}:8006/api2/json/nodes/${TARGETNODE}/storage/sda4/content/sda4\:iso\/${NAME} | jq --raw-output '.data')
 if [ "${TASK}" != "" ]; then
@@ -40,8 +42,12 @@ if [ "${TASK}" != "" ]; then
 else
         exit 1
 fi
+echo "...done"
+
+sleep 2
 
 # Copy ISO to ProxMox
+echo "Copying ISO to ProxMox..."
 TASK=$(curl --silent --insecure --cookie "${COOKIE}" --header "${CSRFTOKEN}" -X POST \
         --data-urlencode content="iso" \
         --data-urlencode filename="${NAME}" \
@@ -60,8 +66,12 @@ if [ "${TASK}" != "" ]; then
 else
         exit 1
 fi
+echo "...done"
+
+sleep 20
 
 # Mount CD on VM
+echo "Mounting CD"
 curl --silent --insecure  --cookie "${COOKIE}" --header "${CSRFTOKEN}" -X POST \
         --data-urlencode ide2="sda4:iso/${NAME},media=cdrom" \
         https://${BMC_ENDPOINT}:8006/api2/json/nodes/${TARGETNODE}/qemu/${VMID}/config
